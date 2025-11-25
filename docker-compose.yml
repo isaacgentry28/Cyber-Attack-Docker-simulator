@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  collector:
+    build: ./cyber-range/collector
+    container_name: collector
+    ports:
+      - "8000:8000"
+    networks:
+      - cybernet
+
+  vulnerable_app:
+    build: ./cyber-range/vulnerable_app
+    container_name: vulnerable_app
+    ports:
+      - "5000:5000"
+    environment:
+      - COLLECTOR_URL=http://collector:8000
+    depends_on:
+      - collector
+    networks:
+      - cybernet
+
+  attacker:
+    build:
+      context: ./cyber-range/attacker
+      dockerfile: Dockerfile
+    container_name: attacker
+    environment:
+      - TARGET_URL=http://vulnerable_app:5000
+    depends_on:
+      - vulnerable_app
+    networks:
+      - cybernet
+
+
+networks:
+  cybernet:
+    driver: bridge
